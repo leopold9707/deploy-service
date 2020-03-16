@@ -23,7 +23,8 @@ def main():
                       port=8080,
                       target_port=8080
                       )],
-                  selector={"app": "ws"}
+                  selector={"app": "ws"},
+                  type="NodePort"
                     )
                 )
     k8s_core_v1 = client.CoreV1Api()
