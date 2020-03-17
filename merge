@@ -1,0 +1,49 @@
+from os import path
+
+import yaml
+
+from kubernetes import client, config
+
+
+def create_deploy():
+    config.load_kube_config()
+
+    with open(path.join(path.dirname(__file__), "ws-deploy.yaml")) as f:
+        dep = yaml.safe_load(f)
+        k8s_apps_v1 = client.AppsV1Api()
+        resp = k8s_apps_v1.create_namespaced_deployment(
+            body=dep, namespace="default")
+        print("Deployment created. status='%s'" % resp.metadata.name)
+        
+def create_svc():
+    config.load_kube_config()
+
+    body = client.V1Service(
+                api_version= "v1",
+                kind= "Service",
+                metadata=client.V1ObjectMeta(
+                  name= "ws-service",
+                  labels={"app": "ws"}
+                  ),
+                spec=client.V1ServiceSpec(
+                  ports=[client.V1ServicePort(
+                      port=8080,
+                      target_port=8080
+                      )],
+                  selector={"app": "ws"},
+                  type="NodePort"
+                    )
+                )
+    k8s_core_v1 = client.CoreV1Api()
+    resp = k8s_core_v1.create_namespaced_service(
+        body=body, namespace="default")
+    print("Service created. status='%s'" % resp.metadata.name)
+    
+    
+ def main():
+    create_deploy()
+    create_svc()
+
+
+if __name__ == '__main__':
+    main()
